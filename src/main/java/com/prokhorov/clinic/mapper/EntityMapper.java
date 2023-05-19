@@ -13,7 +13,8 @@ import java.util.Optional;
 public class EntityMapper {
     public static Person daoToEntity(PersonDao dao) {
         Optional<RoleType> role = RoleType.parseFromString(dao.getRole());
-        return role.map(personType -> new Person(dao.getSurname(), dao.getName(), dao.getPatronymic(), personType.getTitle(), dao.getPhone(), dao.getMail())).orElse(null);
+        return role.map(personType -> new Person(dao.getSurname(), dao.getName(), dao.getPatronymic(), personType.getTitle(), dao.getPhone(), dao.getMail(), dao.getSex()))
+                .orElse(null);
     }
 
     public static Address daoToEntity(AddressDao dao) {
@@ -21,7 +22,7 @@ public class EntityMapper {
     }
 
     public static PersonDao entityToDao(Person person) {
-        return new PersonDao(person.getName(), person.getSurname(), person.getPatron(), person.getRole(), person.getPhone(), person.getMail());
+        return new PersonDao(person.getName(), person.getSurname(), person.getPatron(), person.getRole(), person.getPhone(), person.getMail(), person.getSex());
     }
 
     public static DataPersonDao entityToDao(Person person, Patient patient) {

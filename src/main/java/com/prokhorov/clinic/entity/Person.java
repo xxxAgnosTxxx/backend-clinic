@@ -36,13 +36,17 @@ public class Person {
     @Column(name = "mail")
     private String mail;
 
-    public Person(String surname, String name, String patron, String role, String phone, String mail) {
+    @Column(name = "sex")
+    private Boolean sex;
+
+    public Person(String surname, String name, String patron, String role, String phone, String mail, Boolean sex) {
         this.name = name;
         this.patron = patron;
         this.surname = surname;
         this.role = role;
         this.phone = phone;
         this.mail = mail;
+        this.sex = sex;
     }
 
     @Override
@@ -58,5 +62,6 @@ public class Person {
         this.setRole(person.getRole());
         this.setPhone(person.getPhone());
         this.setMail(person.getMail());
+        this.setSex(person.getSex());
     }
 }

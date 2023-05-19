@@ -27,4 +27,6 @@ public class PersonDao {
     @NotNull
     private String phone;
     private String mail;
+    @NotNull
+    private Boolean sex;
 }
