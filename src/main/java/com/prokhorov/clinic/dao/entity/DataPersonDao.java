@@ -11,8 +11,6 @@ public class DataPersonDao {
     private PersonDao person;
     private String password;
     //для сотрудника
-    private String speciality;
-    private String position;
     private String login;
     //для пациента
     private String snils;

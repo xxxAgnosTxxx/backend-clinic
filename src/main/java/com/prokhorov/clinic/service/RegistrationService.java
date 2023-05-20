@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,27 +32,20 @@ public class RegistrationService {
     private TokenService tokenService;
 
     public ResponseEntity registerPerson(PersonDao dao) {
-        RoleType type = RoleType.parseFromString(dao.getRole()).get();
-        String role = type.getTitle();
-        UUID personId;
-        if (Objects.nonNull(personRepository.findByPhoneAndType(dao.getPhone(), role))) {
+        String role = RoleType.parseFromString(dao.getRole()).get().getTitle();
+        Person person = personRepository.findByPhoneAndType(dao.getPhone(), role);
+        if (Objects.nonNull(person)) {
             return ResponseEntity.badRequest().body("Пользователь с таким номером телефона уже зарегистрирован.");
-        } else if (!Objects.isNull(personRepository.findByPhone(dao.getPhone()))) {
-            Person person = personRepository.findByPhone(dao.getPhone());
-            person.setRole(person.getRole() + ";" + role);
-            personRepository.save(person);
-            personId = tokenService.getToken(person);
-            return ResponseEntity.ok().body(personId.toString());
         } else {
-            Person person = personRepository.save(EntityMapper.daoToEntity(dao));
-            personId = tokenService.getToken(person);
+            Person newPerson = personRepository.save(EntityMapper.daoToEntity(dao));
+            UUID personId = tokenService.getToken(newPerson);
             return ResponseEntity.ok().body(personId.toString());
         }
     }
 
     public ResponseEntity signIn(LoginDao dao) {
         RoleType type = RoleType.parseFromString(dao.getRole()).get();
-        Person person;
+        Person person = null;
         if (type.equals(RoleType.EMPLOYEE)) {
             Optional<Employee> employeeData = employeeDataRepository.findByAuthIdAndPassword(dao.getLogin(), dao.getPassword());
             if (!employeeData.isPresent()) {
@@ -61,15 +55,22 @@ public class RegistrationService {
             if (Objects.nonNull(person)) {
                 return ResponseEntity.ok().body(tokenService.getToken(person));
             }
-        } else if (type.equals(RoleType.PATIENT)){
+        } else if (type.equals(RoleType.PATIENT)) {
             Optional<Patient> patientData = patientDataRepository.findByPolisAndPassword(dao.getLogin(), dao.getPassword());
-            if (!patientData.isPresent()) {
+            List<Patient> patientDataByPhone = patientDataRepository.findByPassword(dao.getPassword());
+            if (patientData.isPresent()) {
+                person = personRepository.findById(patientData.get().getPersonId()).orElse(null);
+            } else if (!patientDataByPhone.isEmpty()) {
+                Patient tmpPatient = patientDataByPhone.stream()
+                        .filter(p -> isPatientHasThisPhone(p, dao.getLogin()))
+                        .findFirst()
+                        .orElse(null);
+                if (tmpPatient != null) person = personRepository.findById(tmpPatient.getPersonId()).orElse(null);
+            }
+            if (person == null) {
                 return ResponseEntity.badRequest().body("Неверный логин или пароль.");
             }
-            person = personRepository.findById(patientData.get().getPersonId()).orElse(null);
-            if (Objects.nonNull(person)) {
-                return ResponseEntity.ok().body(tokenService.getToken(person));
-            }
+            return ResponseEntity.ok().body(tokenService.getToken(person));
         }
         return ResponseEntity.badRequest().body("Неизвестная ошибка входа.");
     }
@@ -81,7 +82,7 @@ public class RegistrationService {
         if (person.getRole().equals(RoleType.EMPLOYEE.getTitle())) {
             if (employeeDataRepository.existsById(person.getPersonId()))
                 return ResponseEntity.badRequest().body("Вы уже зарегистрированы.");
-            Employee data = new Employee(person.getPersonId(),true, personData.getPassword(), personData.getLogin());
+            Employee data = new Employee(person.getPersonId(), true, personData.getPassword(), personData.getLogin());
             employeeDataRepository.save(data);
             return ResponseEntity.ok().body(token);
         } else {
@@ -91,5 +92,13 @@ public class RegistrationService {
             patientDataRepository.save(data);
             return ResponseEntity.ok().body(token);
         }
+    }
+
+    private boolean isPatientHasThisPhone(Patient patient, String phone) {
+        Person person = personRepository.findByPhoneAndType(phone, RoleType.PATIENT.getTitle());
+        if (person != null) {
+            return patient.getPersonId().equals(person.getPersonId());
+        }
+        return false;
     }
 }
