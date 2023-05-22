@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 public interface CallRepository extends JpaRepository<Call, Long> {
@@ -49,4 +48,7 @@ public interface CallRepository extends JpaRepository<Call, Long> {
 
     @Query("select c from Call c where c.employeeId like :emp")
     List<Call> findAllByEmployeeId(Long emp);
+
+    @Query("select c from Call c where c.employeeId like :emp and c.phone like :phone and c.description like :desc")
+    List<Call> findByEmployeePhoneDateDescription(Long emp, String phone, String desc);
 }

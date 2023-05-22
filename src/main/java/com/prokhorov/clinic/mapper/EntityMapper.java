@@ -7,6 +7,7 @@ import com.prokhorov.clinic.entity.Call;
 import com.prokhorov.clinic.entity.Patient;
 import com.prokhorov.clinic.entity.Person;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -43,23 +44,76 @@ public class EntityMapper {
         return new AddressDao(address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(), address.getFlatNum());
     }
 
-    public static CallDao entityToDao(Person person, Call call, Address address){
-        LocalDateTime timestamp = call.getDate().toLocalDateTime();
-        String date = timestamp.toLocalDate()+" "+timestamp.toLocalTime();
+    /**
+     * вызов в лк пациента
+     * @param person
+     * @param call
+     * @param address
+     * @return
+     */
+    public static CallDao entityToDao(Person person, Call call, Address address) {
+        String date = parseCallDateToString(call.getDate());
         return new CallDao(person.getSurname(), person.getName(), person.getPatron(), date, call.getPhone(), call.getStatus(), call.getDescription(),
                 address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(), address.getFlatNum());
     }
 
-    public static CallDao entityToDao(Person person, Call call, Address address, String stat){
-        LocalDateTime timestamp = call.getDate().toLocalDateTime();
-        String date = timestamp.toLocalDate()+" "+timestamp.toLocalTime();
+    /**
+     * вызов на вкладке приема сотрудника
+     * @param person
+     * @param call
+     * @param address
+     * @param stat
+     * @return
+     */
+    public static CallDao entityToDao(Person person, Call call, Address address, String stat) {
+        String date = parseCallDateToString(call.getDate());
         return new CallDao(person.getSurname(), person.getName(), person.getPatron(), date, call.getPhone(), call.getStatus(), call.getDescription(),
                 address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(), address.getFlatNum(), stat);
     }
 
-    public static CallDao entityToDao(Call call, Address address){
-        LocalDateTime timestamp = call.getDate().toLocalDateTime();
-        String date = timestamp.toLocalDate()+" "+timestamp.toLocalTime();
+    /**
+     * анонимный вызов
+     * @param call
+     * @param address
+     * @return
+     */
+    public static CallDao entityToDao(Call call, Address address) {
+        String date = parseCallDateToString(call.getDate());
         return new CallDao(date, call.getPhone(), call.getStatus(), call.getDescription(), address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(), address.getFlatNum());
+    }
+
+    /**
+     * вызов для диспетчера от зарегестрированного пользователя
+     * @param person
+     * @param call
+     * @param address
+     * @param stat
+     * @param employee
+     * @return
+     */
+    public static CallDao entityToDao(Person person, Call call, Address address, String stat, Person employee) {
+        String date = parseCallDateToString(call.getDate());
+        return new CallDao(person.getSurname(), person.getName(), person.getPatron(), date, call.getPhone(), call.getStatus(),
+                call.getDescription(), address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(),
+                address.getFlatNum(), stat, employee.getSurname(), employee.getName(), employee.getPatron(), call.getIsPaid());
+    }
+
+    /**
+     * анонимный вызов для диспетчера
+     * @param call
+     * @param address
+     * @param employee
+     * @return
+     */
+    public static CallDao entityToDao(Call call, Address address, Person employee) {
+        String date = parseCallDateToString(call.getDate());
+        return new CallDao(date, call.getPhone(), call.getStatus(), call.getDescription(), address.getCountry(), address.getCity(),
+                address.getStreet(), address.getHouseNum(), address.getFlatNum(), employee.getSurname(), employee.getName(),
+                employee.getPatron(), call.getIsPaid());
+    }
+
+    private static String parseCallDateToString(Timestamp callDate) {
+        LocalDateTime timestamp = callDate.toLocalDateTime();
+        return timestamp.toLocalDate() + " " + timestamp.toLocalTime();
     }
 }

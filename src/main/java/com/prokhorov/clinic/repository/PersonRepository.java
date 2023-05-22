@@ -21,4 +21,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     @Query("select p from Person p where p.surname like :surname and p.name like :name and p.patron like :patron and p.phone like :phone")
     Optional<Person> findOneBySurnameNamePatronPhone(String surname, String name, String patron, String phone);
+
+    @Query("select p from Person p where p.surname like :surname and p.name like :name and p.patron like :patron and p.role like :role")
+    Optional<Person> findOneBySurnameNamePatronRole(String surname, String name, String patron, String role);
 }

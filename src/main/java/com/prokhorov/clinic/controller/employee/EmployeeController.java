@@ -45,4 +45,9 @@ public class EmployeeController {
     public ResponseEntity acceptCall(@RequestParam UUID token, @RequestBody CallDao callDao){
         return callService.changeStatusCall(token, callDao);
     }
+
+    @PutMapping("/call/pay")
+    public ResponseEntity setPayCall(@RequestParam UUID token, @RequestBody CallDao callDao){
+        return callService.setPayCall(token, callDao);
+    }
 }

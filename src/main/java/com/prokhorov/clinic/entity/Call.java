@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.sql.Date;
 import java.sql.Timestamp;
 
 @Entity
@@ -25,7 +24,7 @@ public class Call {
     @Column(name = "patient_id")
     private Long patientId;
 
-    @Column(name = "date")
+    @Column(name = "date_reg")
     private Timestamp date;
 
     @Column(name = "status")
@@ -42,6 +41,9 @@ public class Call {
 
     @Column(name = "phone")
     private String phone;
+
+    @Column(name = "paid")
+    private Boolean isPaid;
 
     public Call(Timestamp date, String status, Long addressId, String description, String phone) {
         this.date = date;

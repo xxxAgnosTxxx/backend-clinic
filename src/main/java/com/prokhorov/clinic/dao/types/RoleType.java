@@ -10,7 +10,8 @@ import java.util.Optional;
 @Getter
 public enum RoleType {
     PATIENT("patient"),
-    EMPLOYEE("employee");
+    EMPLOYEE("employee"),
+    ADMIN("admin");
 
     private final String title;
 

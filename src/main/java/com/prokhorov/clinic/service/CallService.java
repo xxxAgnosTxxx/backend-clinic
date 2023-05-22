@@ -2,6 +2,7 @@ package com.prokhorov.clinic.service;
 
 import com.prokhorov.clinic.dao.entity.CallDao;
 import com.prokhorov.clinic.dao.types.CallType;
+import com.prokhorov.clinic.dao.types.RoleType;
 import com.prokhorov.clinic.entity.Address;
 import com.prokhorov.clinic.entity.Call;
 import com.prokhorov.clinic.entity.Person;
@@ -119,11 +120,21 @@ public class CallService {
         return calls.stream()
                 .map(c -> {
                     Long patId = c.getPatientId();
-                    if (patId == null)
+                    Long empId = c.getEmployeeId();
+                    if (patId == null) {
+                        if (empId != null) {
+                            return EntityMapper.entityToDao(c, addressRepository.findById(c.getAddressId()).get(), personRepository.findById(empId).get());
+                        }
                         return EntityMapper.entityToDao(c, addressRepository.findById(c.getAddressId()).get());
-                    else {
+                    } else {
+                        if (empId != null) {
+                            String statistic = (callRepository.findLieCalls(patId).size() * 100) / callRepository.findAllByPersonId(patId).size() + "%";
+                            return EntityMapper.entityToDao(personRepository.findById(c.getPatientId()).get(), c,
+                                    addressRepository.findById(c.getAddressId()).get(), statistic, personRepository.findById(empId).get());
+                        }
                         String statistic = (callRepository.findLieCalls(patId).size() * 100) / callRepository.findAllByPersonId(patId).size() + "%";
-                        return EntityMapper.entityToDao(personRepository.findById(c.getPatientId()).get(), c, addressRepository.findById(c.getAddressId()).get(), statistic);
+                        return EntityMapper.entityToDao(personRepository.findById(c.getPatientId()).get(), c,
+                                addressRepository.findById(c.getAddressId()).get(), statistic);
                     }
                 })
                 .collect(Collectors.toList());
@@ -155,5 +166,18 @@ public class CallService {
                         || c.getStatus().equals(CallType.CONFIRMED.getTitle())
                         || c.getStatus().equals(CallType.IN_PROGRESS.getTitle()))
                 .findFirst().get();
+    }
+
+    public ResponseEntity setPayCall(UUID token, CallDao dao){
+        if (tokenService.isOldToken(token))
+            return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
+        Person employee = personRepository.findOneBySurnameNamePatronRole(dao.getSurnameEmp(), dao.getNameEmp(), dao.getPatronEmp(), RoleType.EMPLOYEE.getTitle()).get();
+        Timestamp callDate = getTimestampFromString(dao.getDate());
+        Call call = callRepository.findByEmployeePhoneDateDescription(employee.getPersonId(), dao.getPhone(), dao.getDescription()).stream()
+                .filter(c->c.getDate().equals(callDate))
+                .findFirst().get();
+        call.setIsPaid(true);
+        callRepository.save(call);
+        return ResponseEntity.ok().build();
     }
 }
