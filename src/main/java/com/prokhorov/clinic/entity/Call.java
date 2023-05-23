@@ -43,7 +43,7 @@ public class Call {
     private String phone;
 
     @Column(name = "paid")
-    private Boolean isPaid;
+    private Boolean isPaid = false;
 
     @Column(name = "date_accept")
     private Timestamp acceptDate;

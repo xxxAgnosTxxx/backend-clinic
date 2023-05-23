@@ -145,8 +145,22 @@ public class CallService {
         if (tokenService.isOldToken(token))
             return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
         Person person = personRepository.findById(tokenService.getPerson(token).getPersonId()).get();
-        List<CallDao> calls = convertAllKindOfCalls(callRepository.findAllByEmployeeId(person.getPersonId()));
+        List<CallDao> calls = convertAllKindOfCalls(callRepository.findAllByEmployeeId(person.getPersonId()))
+                .stream()
+                .sorted(this::compareByTimestamp)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(calls);
+    }
+
+    public ResponseEntity getActiveCalls(UUID token){
+        if (tokenService.isOldToken(token))
+            return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
+        Person person = personRepository.findById(tokenService.getPerson(token).getPersonId()).get();
+        List<CallDao> activeCalls = convertAllKindOfCalls(callRepository.findAllByEmployeeId(person.getPersonId())).stream()
+                .filter(c -> c.getStatus().equals(CallType.IN_PROGRESS.getTitle()))
+                .sorted(this::compareByTimestamp)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(activeCalls);
     }
 
     public ResponseEntity changeStatusCall(UUID token, CallDao callDao) {
@@ -187,5 +201,11 @@ public class CallService {
         call.setIsPaid(true);
         callRepository.save(call);
         return ResponseEntity.ok().build();
+    }
+
+    private int compareByTimestamp(CallDao callDao1, CallDao callDao2) {
+        LocalDateTime ld1 = LocalDateTime.parse(callDao1.getDate().replace(" ", "T"));
+        LocalDateTime ld2 = LocalDateTime.parse(callDao2.getDate().replace(" ", "T"));
+        return ld2.compareTo(ld1);
     }
 }

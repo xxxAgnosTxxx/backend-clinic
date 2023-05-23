@@ -35,6 +35,11 @@ public class EmployeeController {
         return callService.getHistoryCalls(token);
     }
 
+    @GetMapping("/call/history/active")
+    public ResponseEntity getEmployeeActiveCalls(@RequestParam UUID token){
+        return callService.getActiveCalls(token);
+    }
+
     /**
      * Принятие вызова
      * @param token
