@@ -3,8 +3,7 @@ package com.prokhorov.clinic.dao.types;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 @Getter
 @AllArgsConstructor
@@ -19,7 +18,15 @@ public enum CallType {
 
     private final String title;
 
-    public static Optional<CallType> parseFromString(String string){
+    public static EnumSet<CallType> getFinishedCallTypes() {
+        return EnumSet.of(
+                FINISHED,
+                CANCELED,
+                FAILED,
+                HOSPITALIZED);
+    }
+
+    public static Optional<CallType> parseFromString(String string) {
         return Arrays.stream(values())
                 .filter(type -> type.getTitle().equalsIgnoreCase(string))
                 .findFirst();

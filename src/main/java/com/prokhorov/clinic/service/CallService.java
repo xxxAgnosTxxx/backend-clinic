@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -156,6 +157,13 @@ public class CallService {
         Call call = filterActiveCalls(callRepository.findByPhoneDateDescription(callDao.getPhone(), callDao.getDescription(), date));
         call.setStatus(CallType.parseFromString(callDao.getStatus()).get().getTitle());
         call.setEmployeeId(employee.getPersonId());
+        //время приема и завершения вызовов
+        CallType type = CallType.parseFromString(callDao.getStatus()).get();
+        if (type.equals(CallType.IN_PROGRESS)) {
+            call.setAcceptDate(Timestamp.from(Instant.now()));
+        } else if (CallType.getFinishedCallTypes().contains(type)) {
+            call.setEndDate(Timestamp.from(Instant.now()));
+        }
         callRepository.save(call);
         return ResponseEntity.ok(tokenService.getToken(employee));
     }
@@ -168,13 +176,13 @@ public class CallService {
                 .findFirst().get();
     }
 
-    public ResponseEntity setPayCall(UUID token, CallDao dao){
+    public ResponseEntity setPayCall(UUID token, CallDao dao) {
         if (tokenService.isOldToken(token))
             return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
         Person employee = personRepository.findOneBySurnameNamePatronRole(dao.getSurnameEmp(), dao.getNameEmp(), dao.getPatronEmp(), RoleType.EMPLOYEE.getTitle()).get();
         Timestamp callDate = getTimestampFromString(dao.getDate());
         Call call = callRepository.findByEmployeePhoneDateDescription(employee.getPersonId(), dao.getPhone(), dao.getDescription()).stream()
-                .filter(c->c.getDate().equals(callDate))
+                .filter(c -> c.getDate().equals(callDate))
                 .findFirst().get();
         call.setIsPaid(true);
         callRepository.save(call);

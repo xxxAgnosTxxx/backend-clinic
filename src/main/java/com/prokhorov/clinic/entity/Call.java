@@ -45,6 +45,12 @@ public class Call {
     @Column(name = "paid")
     private Boolean isPaid;
 
+    @Column(name = "date_accept")
+    private Timestamp acceptDate;
+
+    @Column(name = "date_end")
+    private Timestamp endDate;
+
     public Call(Timestamp date, String status, Long addressId, String description, String phone) {
         this.date = date;
         this.status = status;
