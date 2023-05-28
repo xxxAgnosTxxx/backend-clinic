@@ -27,6 +27,8 @@ public class CallDao {
     private String nameEmp;
     private String patronEmp;
     private Boolean isPaid;
+    private String acceptDate;
+    private String finishDate;
 
     public CallDao(String date, String phone, String status, String description, String country, String city, String street, String house, Short flat) {
         this.date = date;

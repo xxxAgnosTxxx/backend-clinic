@@ -35,6 +35,11 @@ public class EmployeeController {
         return callService.getHistoryCalls(token);
     }
 
+    /**
+     * Активные вызовы
+     * @param token
+     * @return
+     */
     @GetMapping("/call/history/active")
     public ResponseEntity getEmployeeActiveCalls(@RequestParam UUID token){
         return callService.getActiveCalls(token);
@@ -51,6 +56,12 @@ public class EmployeeController {
         return callService.changeStatusCall(token, callDao);
     }
 
+    /**
+     * Установка статуса оплаты
+     * @param token
+     * @param callDao
+     * @return
+     */
     @PutMapping("/call/pay")
     public ResponseEntity setPayCall(@RequestParam UUID token, @RequestBody CallDao callDao){
         return callService.setPayCall(token, callDao);

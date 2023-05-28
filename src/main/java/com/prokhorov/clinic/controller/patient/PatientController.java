@@ -43,6 +43,12 @@ public class PatientController {
         return addressService.getAddress(token);
     }
 
+    /**
+     * Удаление адреса
+     * @param token
+     * @param dao
+     * @return
+     */
     @DeleteMapping("/address")
     public ResponseEntity deleteAddress(@RequestParam UUID token, @RequestBody AddressDao dao){
         return addressService.deleteAddress(token, dao);

@@ -1,6 +1,7 @@
 package com.prokhorov.clinic.service;
 
 import com.prokhorov.clinic.dao.entity.CallDao;
+import com.prokhorov.clinic.dao.entity.CallFilterDao;
 import com.prokhorov.clinic.dao.types.CallType;
 import com.prokhorov.clinic.dao.types.RoleType;
 import com.prokhorov.clinic.entity.Address;
@@ -152,7 +153,7 @@ public class CallService {
         return ResponseEntity.ok(calls);
     }
 
-    public ResponseEntity getActiveCalls(UUID token){
+    public ResponseEntity getActiveCalls(UUID token) {
         if (tokenService.isOldToken(token))
             return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
         Person person = personRepository.findById(tokenService.getPerson(token).getPersonId()).get();
@@ -207,5 +208,58 @@ public class CallService {
         LocalDateTime ld1 = LocalDateTime.parse(callDao1.getDate().replace(" ", "T"));
         LocalDateTime ld2 = LocalDateTime.parse(callDao2.getDate().replace(" ", "T"));
         return ld2.compareTo(ld1);
+    }
+
+    public ResponseEntity getFilters(UUID token) {
+        if (tokenService.isOldToken(token))
+            return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
+        Person p = tokenService.getPerson(token);
+        CallFilterDao filterDao = new CallFilterDao();
+        filterDao.setStatusPay(Arrays.asList(true, false));
+        if (p.getRole().equals(RoleType.EMPLOYEE.getTitle())) {
+            filterDao.setStatuses(CallType.getFinishedCallTypes().stream()
+                    .map(CallType::getTitle)
+                    .collect(Collectors.toList()));
+        } else {
+            filterDao.setStatuses(Arrays.stream(CallType.values()).collect(Collectors.toList()).stream()
+                    .map(CallType::getTitle)
+                    .collect(Collectors.toList()));
+        }
+        return ResponseEntity.ok(filterDao);
+    }
+
+    public ResponseEntity filterCalls(UUID token, CallFilterDao filterDao) {
+        if (tokenService.isOldToken(token))
+            return ResponseEntity.badRequest().body("Время ожидания истекло. Войдите заново.");
+        Person p = tokenService.getPerson(token);
+        List<CallDao> calls;
+        if(p.getRole().equals(RoleType.PATIENT.getTitle())){
+            calls = (List<CallDao>) getCalls(token).getBody();
+        }else {
+            calls = (List<CallDao>) getHistoryCalls(token).getBody();
+        }
+        List<CallDao> daos = calls.stream()
+                .filter(c -> filterDao.getStatuses().isEmpty() || filterDao.getStatuses().contains(c.getStatus()))
+                .filter(c -> filterDao.getStatusPay().isEmpty() || filterDao.getStatusPay().contains(c.getIsPaid()))
+                .filter(c -> {
+                    Timestamp callReg = getTimestampFromString(c.getDate());
+                    return filterDao.getRegistration().isBetween(callReg);
+                })
+                .filter(c -> {
+                    if (c.getAcceptDate() != null) {
+                        Timestamp callAccept = getTimestampFromString(c.getAcceptDate());
+                        return filterDao.getAccepted().isBetween(callAccept);
+                    }
+                    return true;
+                })
+                .filter(c -> {
+                    if (c.getFinishDate() != null) {
+                        Timestamp callFinish = getTimestampFromString(c.getFinishDate());
+                        filterDao.getFinished().isBetween(callFinish);
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(daos);
     }
 }

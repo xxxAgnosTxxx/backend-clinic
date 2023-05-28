@@ -95,7 +95,7 @@ public class EntityMapper {
         String date = parseCallDateToString(call.getDate());
         return new CallDao(person.getSurname(), person.getName(), person.getPatron(), date, call.getPhone(), call.getStatus(),
                 call.getDescription(), address.getCountry(), address.getCity(), address.getStreet(), address.getHouseNum(),
-                address.getFlatNum(), stat, employee.getSurname(), employee.getName(), employee.getPatron(), call.getIsPaid());
+                address.getFlatNum(), stat, employee.getSurname(), employee.getName(), employee.getPatron(), call.getIsPaid(), null, null);
     }
 
     /**
